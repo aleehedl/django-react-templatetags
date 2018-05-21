@@ -16,6 +16,7 @@ from django_react_templatetags.encoders import json_encoder_cls_factory
 register = template.Library()
 
 CONTEXT_KEY = "REACT_COMPONENTS"
+CONTEXT_BUNDLES_KEY = "REACT_COMPONENT_BUNDLES"
 CONTEXT_PROCESSOR = 'django_react_templatetags.context_processors.react_context_processor'  # NOQA
 
 
@@ -90,7 +91,9 @@ class ReactTagManager(Node):
                 settings.REACT_RENDER_HOST:
             from django_react_templatetags import ssr
 
-            component_html = ssr.load_or_empty(component)
+            component_html, component_bundles = ssr.load_or_empty(component)
+            if component_bundles:
+                context[CONTEXT_BUNDLES_KEY] = context.get(CONTEXT_BUNDLES_KEY, []) + component_bundles
 
         div_attr = (
             ('id', identifier),
@@ -204,7 +207,10 @@ def react_print(context):
     components = context[CONTEXT_KEY]
     context[CONTEXT_KEY] = []
 
+    bundles = context.get(CONTEXT_BUNDLES_KEY, [])
+    context[CONTEXT_BUNDLES_KEY] = []
+
     new_context = context.__copy__()
     new_context['components'] = components
-
+    new_context['bundles'] = bundles
     return new_context

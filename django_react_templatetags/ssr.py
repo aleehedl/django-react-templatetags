@@ -5,7 +5,6 @@ This modules manages SSR rendering logic
 """
 
 import logging
-import json
 
 from django.conf import settings
 import requests
@@ -20,13 +19,17 @@ def load_or_empty(component):
         component['json'],
     )
 
+    inner_html = ''
+    bundles = []
     try:
-        inner_html = load(request_json)
+        data = load(request_json)
+        inner_html = data.get('html', '')
+        bundles = data.get('bundles', [])
     except requests.exceptions.RequestException as e:
         inner_html = ''
         logger.error(e)
 
-    return inner_html
+    return inner_html, bundles
 
 
 def load(request_json):
@@ -37,7 +40,7 @@ def load(request_json):
     )
 
     req.raise_for_status()
-    return req.text
+    return req.json()
 
 
 def get_request_timeout():
